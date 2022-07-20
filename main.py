@@ -39,14 +39,14 @@ class SQLiteClient:
             df = pd.read_sql(sql, conn, **kwargs)
         return df
 
-    def create_table(self, sql: str):
+    def create_table(self, sql: str) -> None:
         try:
             with self.__connection as conn:
                 conn.execute(sql)
         except sqlite3.Error as e:
             print(e)
 
-    def push_data_from_dataframe(self, df: pd.DataFrame, table_name: str):
+    def push_data_from_dataframe(self, df: pd.DataFrame, table_name: str) -> int:
         with self.__connection as conn:
             res = df.to_sql(table_name, conn, if_exists='append', index=False)
         return res
@@ -56,13 +56,13 @@ class CSVHandler:
     CHUNK_SIZE = 1000
 
     @staticmethod
-    def date_filter(df, date):
+    def date_filter(df: pd.DataFrame, date: str) -> pd.DataFrame:
         date = datetime.strptime(date, '%Y-%m-%d').date()
         df = df[df['timestamp'].dt.date == date]
         return df
 
     @staticmethod
-    def timestamp_to_date(df):
+    def timestamp_to_date(df: pd.DataFrame) -> pd.DataFrame:
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
         return df
 
@@ -75,7 +75,7 @@ class CSVHandler:
             return df
         return data
 
-    def processing(self, df, date):
+    def processing(self, df: pd.DataFrame, date: str) -> pd.DataFrame:
         df = self.timestamp_to_date(df)
         df = self.date_filter(df, date)
         return df
@@ -88,12 +88,12 @@ class CSVHandler:
 
 class Processing:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.sqlite_cli = SQLiteClient()
         self.csv_handler = CSVHandler()
 
     @staticmethod
-    def filter_df(df):
+    def filter_df(df: pd.DataFrame) -> pd.DataFrame:
         condition = df.ban_time - pd.to_timedelta(24, 'h') < df.timestamp_server
         result = df[~condition]
         return result
